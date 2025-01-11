@@ -6,4 +6,10 @@ Yuqi Nie, Nam H. Nguyen, Phanwadee Sinthong, Jayant Kalagnanam
 *The Eleventh International Conference on Learning Representations (ICLR), 2023*  
 [Paper Link](https://openreview.net/forum?id=Jbdc0vTOcol)
 
-The implementation aims to reproduce the proposed PathTST architecture and evaluate its performance on long-term time series forecasting tasks.
+The implementation aims to reproduce the proposed PatchTST architecture and evaluate its performance on long-term time series forecasting tasks.
+
+### Datasets
+
+Inside the project's root directory, create a folder named `datasets` and download all necessary datasets from the following link:
+
+[Download Datasets](https://drive.google.com/uc?export=download&id=1phIAd-QenHxTPD2wC3TVVXrjdj8mQT3C)

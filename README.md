@@ -13,3 +13,5 @@ The implementation aims to reproduce the proposed PatchTST architecture and eval
 Inside the project's root directory, create a folder named `datasets` and download all necessary datasets from the following link:
 
 [Download Datasets](https://drive.google.com/uc?export=download&id=1phIAd-QenHxTPD2wC3TVVXrjdj8mQT3C)
+
+Place all extracted datasets in the `datasets` folder to ensure proper code functionality.

@@ -4,7 +4,7 @@ from typing import Union
 
 
 @dataclass
-class PatchTSTTrainingConfig:
+class TrainingConfig:
     # General parameters
     model_identifier: str
     seed: int
@@ -264,14 +264,14 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def parse_args() -> PatchTSTTrainingConfig:
+def parse_args() -> TrainingConfig:
     """
     Parse command-line arguments and return a configuration object.
     """
     parser = get_parser()
     args = parser.parse_args()
 
-    return PatchTSTTrainingConfig(
+    return TrainingConfig(
         model_identifier=args.model_identifier,
         seed=args.seed,
         train_mode=args.train_mode,

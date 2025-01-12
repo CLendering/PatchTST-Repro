@@ -105,7 +105,7 @@ def corr(y_true, y_pred):
     d += 1e-12
 
     # Return the scaled mean correlation
-    return 0.01 * (u / d).mean(-1)
+    return 0.01 * (u / d)
 
 def calculate_metrics(y_true, y_pred):
     """

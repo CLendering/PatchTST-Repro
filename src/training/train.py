@@ -272,11 +272,8 @@ def test_model(model, config: TrainingConfig, train_identifier: str, device: tor
             -1, filtered_inputs.shape[-2], filtered_inputs.shape[-1]
         )
 
-        predictions = np.array(filtered_predictions).reshape(-1, filtered_predictions.shape[-2], filtered_predictions.shape[-1])
-        ground_truth = np.array(filtered_ground_truth).reshape(-1, filtered_ground_truth.shape[-2], filtered_ground_truth.shape[-1])
-        inputs = np.array(filtered_inputs).reshape(-1, filtered_inputs.shape[-2], filtered_inputs.shape[-1])
 
-        metrics = calculate_metrics(predictions, ground_truth)
+        metrics = calculate_metrics(filtered_predictions, filtered_ground_truth)
         print("Metrics:")
         for key, value in metrics.items():
             print(f"{key}: {value}")
@@ -287,9 +284,9 @@ def test_model(model, config: TrainingConfig, train_identifier: str, device: tor
                 f.write(f"{key}: {value}\n")
 
         # Save values to a numpy file
-        np.save(os.path.join(results_path, "predictions.npy"), predictions)
-        np.save(os.path.join(results_path, "ground_truth.npy"), ground_truth)
-        np.save(os.path.join(results_path, "inputs.npy"), inputs)
+        np.save(os.path.join(results_path, "predictions.npy"), filtered_predictions)
+        np.save(os.path.join(results_path, "ground_truth.npy"), filtered_ground_truth)
+        np.save(os.path.join(results_path, "inputs.npy"), filtered_inputs)
 
 
     return metrics

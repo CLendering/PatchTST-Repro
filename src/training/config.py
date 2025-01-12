@@ -14,8 +14,6 @@ class TrainingConfig:
     start_token_length: int
     prediction_length: int
     dataset: str
-    data_root_dir: str
-    data_file: str
     checkpoint_dir: str
     features: str
     target_feature: str
@@ -78,7 +76,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--model_identifier",
         type=str,
-        default="patchtst",
+        default="PatchTST",
         help="Model identifier",
     )
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
@@ -117,18 +115,6 @@ def get_parser() -> argparse.ArgumentParser:
         type=str,
         default="weather",
         help="Dataset name (default: weather)",
-    )
-    parser.add_argument(
-        "--data_root_dir",
-        type=str,
-        default="./data/ETT/",
-        help="Root directory for the dataset",
-    )
-    parser.add_argument(
-        "--data_file",
-        type=str,
-        default="ETTh1.csv",
-        help="Data file name",
     )
     parser.add_argument(
         "--checkpoint_dir",
@@ -406,8 +392,6 @@ def parse_args() -> TrainingConfig:
         start_token_length=args.start_token_length,
         prediction_length=args.prediction_length,
         dataset=args.dataset,
-        data_root_dir=args.data_root_dir,
-        data_file=args.data_file,
         checkpoint_dir=args.checkpoint_dir,
         features=args.features,
         target_feature=args.target_feature,

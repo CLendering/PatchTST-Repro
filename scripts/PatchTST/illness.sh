@@ -1,3 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name=patchtst             # Job name
+#SBATCH --partition=gpu                   # Partition (queue) to submit to
+#SBATCH --gres=gpu:1                      # Request 1 GPU (full GPU)
+#SBATCH --ntasks=1                        # Run a single task (1 instance of your program)
+#SBATCH --cpus-per-task=16                 # Number of CPU cores per task (adjust based on your needs)
+#SBATCH --mem=64G                         # Total memory (RAM) for the job (adjust based on your dataset)
+#SBATCH --time=24:00:00                    # Time limit (24 hours)
+#SBATCH --output=patchtst_%j.log               # Standard output and error log (%j is replaced by job ID)
+
 if [ ! -d "./logs" ]; then
     mkdir ./logs
 fi
@@ -9,7 +19,7 @@ fi
 model_name=PatchTST
 model_identifier=patchtst_illness
 dataset=illness
-input_length=104
+input_length=104 # 128 for PatchTST/64, 104 for PatchTST/42
 
 for prediction_length in 24 36 48 60
 do

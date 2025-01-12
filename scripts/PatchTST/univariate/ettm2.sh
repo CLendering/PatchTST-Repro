@@ -48,6 +48,6 @@ do
       --epochs 100 \
       --patience 20 \
       --learning_rate_adjustment TST \
-      --pct_start 0.4 \
+      --lr_pct_start 0.4 \
       --bootstrap_iterations 1 --batch_size 128 --learning_rate 0.0001 >logs/supervised/univariate/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

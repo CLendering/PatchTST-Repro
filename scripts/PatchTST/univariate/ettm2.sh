@@ -21,7 +21,7 @@ if [ ! -d "./logs/supervised/univariate" ]; then
 fi
 
 model_name=PatchTST
-model_identifier=patchtst_ettm2
+model_identifier=patchtst_ettm2_univariate
 dataset=ettm2
 input_length=336
 

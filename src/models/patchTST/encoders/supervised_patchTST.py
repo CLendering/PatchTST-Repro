@@ -3,8 +3,9 @@ __all__ = ["PatchTST"]
 from typing import Optional
 from torch import nn, Tensor
 
-from src.models.patchTST.encoders.backbone import PatchTST_backbone
+from src.models.patchTST.encoders.supervised_backbone import PatchTST_backbone
 from src.models.benchmarks.layers.Autoformer_EncDec import series_decomp
+from src.training.config import TrainingConfig
 
 
 class PatchTST(nn.Module):
@@ -16,7 +17,7 @@ class PatchTST(nn.Module):
 
     def __init__(
         self,
-        configs,
+        configs: TrainingConfig,
         max_seq_len: Optional[int] = 1024,
         d_k: Optional[int] = None,
         d_v: Optional[int] = None,
@@ -39,25 +40,25 @@ class PatchTST(nn.Module):
         super().__init__()
 
         # Extract parameters from configs
-        c_in = configs.enc_in
-        context_window = configs.seq_len
-        target_window = configs.pred_len
+        c_in = configs.encoder_input_size
+        context_window = configs.input_length
+        target_window = configs.prediction_length
 
-        n_layers = configs.e_layers
+        n_layers = configs.num_encoder_layers
         n_heads = configs.n_heads
         d_model = configs.d_model
-        d_ff = configs.d_ff
+        d_ff = configs.d_fcn
         dropout = configs.dropout
         fc_dropout = configs.fc_dropout
         head_dropout = configs.head_dropout
 
-        individual = configs.individual
-        patch_len = configs.patch_len
+        individual = configs.individual_head
+        patch_len = configs.patch_length
         stride = configs.stride
-        padding_patch = configs.padding_patch
+        padding_patch = configs.patch_padding
 
         revin = configs.revin
-        affine = configs.affine
+        affine = configs.revin_affine
         subtract_last = configs.subtract_last
 
         self.decomposition = configs.decomposition

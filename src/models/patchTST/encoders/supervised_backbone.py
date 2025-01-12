@@ -9,7 +9,7 @@ from torch import Tensor
 from src.models.patchTST.positional.encoding import generate_positional_encoding
 from src.models.patchTST.heads.flatten import FlattenHead
 from src.models.patchTST.encoders.transformer import TSTEncoder
-from src.models.patchTST.revin import RevIN
+from src.models.patchTST.revin.revin import RevIN
 
 
 class PatchTST_backbone(nn.Module):

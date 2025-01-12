@@ -21,6 +21,25 @@ class TrainingConfig:
     target_feature: str
     encoding_freq: str
 
+    # Formers parameters
+    embed: str
+    output_attention: bool
+    encoder_input_size: int
+    decoder_input_size: int
+    output_size: int
+    d_model: int
+    n_heads: int
+    num_encoder_layers: int
+    num_decoder_layers: int
+    d_fcn: int
+    moving_avg_window_length: int
+    attention_factor: int
+    encoder_distil: bool
+    dropout: float
+    activation: str
+    output_activation: bool
+    do_predict: bool
+
 
     # PatchTST model parameters
     kernel_size: int
@@ -42,9 +61,11 @@ class TrainingConfig:
     patience: int
     num_workers: int
     use_cuda: bool
-    loss_fn: str
     learning_rate_adjustment: str
     lr_pct_start: float
+
+    # Bootstrap parameters
+    bootstrap_iterations: int
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -94,8 +115,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dataset",
         type=str,
-        default="ETTm1",
-        help="Dataset name (default: ETTm1)",
+        default="weather",
+        help="Dataset name (default: weather)",
     )
     parser.add_argument(
         "--data_root_dir",
@@ -133,6 +154,111 @@ def get_parser() -> argparse.ArgumentParser:
         default="h",
         help="Frequency for encoding - [s: Secondly, t: Minutely, h: Hourly, d: Daily, b: Business days, w: Weekly, m: Monthly]",
     )
+
+    # Formers parameters
+    parser.add_argument(
+        "--embed",
+        type=str,
+        default="fixed",
+        help="Embedding type (default: fixed) - [timeFeatures, fixed, learned]",
+    )
+    parser.add_argument(
+        "--output_attention",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable output attention",
+    )
+    parser.add_argument(
+        "--encoder_input_size",
+        type=int,
+        default=7,
+        help="Encoder input size (default: 7)",
+    )
+    parser.add_argument(
+        "--decoder_input_size",
+        type=int,
+        default=7,
+        help="Decoder input size (default: 7)",
+    )
+    parser.add_argument(
+        "--output_size",
+        type=int,
+        default=7,
+        help="Output size (default: 7)",
+    )
+    parser.add_argument(
+        "--d_model",
+        type=int,
+        default=512,
+        help="Model dimension (default: 512)",
+    )
+    parser.add_argument(
+        "--n_heads",
+        type=int,
+        default=8,
+        help="Number of heads (default: 8)",
+    )
+    parser.add_argument(
+        "--num_encoder_layers",
+        type=int,
+        default=2,
+        help="Number of encoder layers (default: 2)",
+    )
+    parser.add_argument(
+        "--num_decoder_layers",
+        type=int,
+        default=1,
+        help="Number of decoder layers (default: 1)",
+    )
+    parser.add_argument(
+        "--d_fcn",
+        type=int,
+        default=2048,
+        help="Fully connected layer dimension (default: 2048)",
+    )
+    parser.add_argument(
+        "--moving_avg_window_length",
+        type=int,
+        default=25,
+        help="Moving average window length (default: 25)",
+    )
+    parser.add_argument(
+        "--attention_factor",
+        type=int,
+        default=1,
+        help="Attention factor (default: 1)",
+    )
+    parser.add_argument(
+        "--encoder_distil",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable encoder distillation",
+    )
+    parser.add_argument(
+        "--dropout",
+        type=float,
+        default=0.05,
+        help="Dropout rate (default: 0.05)",
+    )
+    parser.add_argument(
+        "--activation",
+        type=str,
+        default="gelu",
+        help="Activation function (default: gelu)",
+    )
+    parser.add_argument(
+        "--output_activation",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable output activation",
+    )
+    parser.add_argument(
+        "--do_predict",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable prediction",
+    )
+
 
     # PatchTST model parameters
     parser.add_argument(
@@ -224,7 +350,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--patience",
         type=int,
-        default=10,
+        default=2,
         help="Patience for early stopping (default: 10)",
     )
     parser.add_argument(
@@ -240,12 +366,6 @@ def get_parser() -> argparse.ArgumentParser:
         help="Enable CUDA",
     )
     parser.add_argument(
-        "--loss_fn",
-        type=str,
-        default="mse",
-        help="Loss function (default: mse)",
-    )
-    parser.add_argument(
         "--learning_rate_adjustment",
         type=str,
         default="type3",
@@ -258,7 +378,13 @@ def get_parser() -> argparse.ArgumentParser:
         help="Learning rate percentage start (default: 0.3)",
     )
     
-
+    # Bootstrap parameters
+    parser.add_argument(
+        "--bootstrap_iterations",
+        type=int,
+        default=1,
+        help="Number of bootstrap iterations",
+    )
 
     
     return parser
@@ -303,7 +429,25 @@ def parse_args() -> TrainingConfig:
         patience=args.patience,
         num_workers=args.num_workers,
         use_cuda=args.use_cuda,
-        loss_fn=args.loss_fn,
         learning_rate_adjustment=args.learning_rate_adjustment,
         lr_pct_start=args.lr_pct_start,
+        bootstrap_iterations=args.bootstrap_iterations,
+
+        embed=args.embed,
+        output_attention=args.output_attention,
+        encoder_input_size=args.encoder_input_size,
+        decoder_input_size=args.decoder_input_size,
+        output_size=args.output_size,
+        d_model=args.d_model,
+        n_heads=args.n_heads,
+        num_encoder_layers=args.num_encoder_layers,
+        num_decoder_layers=args.num_decoder_layers,
+        d_fcn=args.d_fcn,
+        moving_avg_window_length=args.moving_avg_window_length,
+        attention_factor=args.attention_factor,
+        encoder_distil=args.encoder_distil,
+        dropout=args.dropout,
+        activation=args.activation,
+        output_activation=args.output_activation,
+        do_predict=args.do_predict,
     )

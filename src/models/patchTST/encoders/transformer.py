@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch import Tensor
 from typing import Optional
 from src.models.patchTST.attention.multihead import MultiheadAttention
-from src.models.utils import Transpose
+from src.models.utils.tensor_ops import Transpose
 
 
 class TSTEncoderLayer(nn.Module):

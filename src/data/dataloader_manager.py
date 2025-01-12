@@ -28,6 +28,15 @@ SUPPORTED_DATASETS = [
     "exchange",
 ]
 
+@dataclass
+class DataParams:
+    dset: str
+    context_points: int
+    target_points: int
+    batch_size: int
+    num_workers: int
+    features: str
+    use_time_features: bool
 
 @dataclass
 class DatasetInfo:
@@ -44,47 +53,47 @@ class DatasetInfo:
 DATASETS_INFO: Dict[str, DatasetInfo] = {
     "ettm1": DatasetInfo(
         dataset_cls=ETTDataset,
-        root_path=Path("../../datasets/ETT-small/"),
+        root_path=Path("datasets/ETT-small/"),
         data_path="ETTm1.csv",
     ),
     "ettm2": DatasetInfo(
         dataset_cls=ETTDataset,
-        root_path=Path("../../datasets/ETT-small/"),
+        root_path=Path("datasets/ETT-small/"),
         data_path="ETTm2.csv",
     ),
     "etth1": DatasetInfo(
         dataset_cls=ETTDataset,
-        root_path=Path("../../datasets/ETT-small/"),
+        root_path=Path("datasets/ETT-small/"),
         data_path="ETTh1.csv",
     ),
     "etth2": DatasetInfo(
         dataset_cls=ETTDataset,
-        root_path=Path("../../datasets/ETT-small/"),
+        root_path=Path("datasets/ETT-small/"),
         data_path="ETTh2.csv",
     ),
     "electricity": DatasetInfo(
         dataset_cls=CustomDataset,
-        root_path=Path("../../datasets/electricity/"),
+        root_path=Path("datasets/electricity/"),
         data_path="electricity.csv",
     ),
     "traffic": DatasetInfo(
         dataset_cls=CustomDataset,
-        root_path=Path("../../datasets/traffic/"),
+        root_path=Path("datasets/traffic/"),
         data_path="traffic.csv",
     ),
     "weather": DatasetInfo(
         dataset_cls=CustomDataset,
-        root_path=Path("../../datasets/weather/"),
+        root_path=Path("datasets/weather/"),
         data_path="weather.csv",
     ),
     "illness": DatasetInfo(
         dataset_cls=CustomDataset,
-        root_path=Path("../../datasets/illness/"),
+        root_path=Path("datasets/illness/"),
         data_path="national_illness.csv",
     ),
     "exchange": DatasetInfo(
         dataset_cls=CustomDataset,
-        root_path=Path("../../datasets/exchange_rate/"),
+        root_path=Path("datasets/exchange_rate/"),
         data_path="exchange_rate.csv",
     ),
 }
@@ -209,7 +218,7 @@ class DataLoaderManager:
         )
 
 
-def get_dataloaders(params: Any) -> DataLoaderManager:
+def get_dataloaders(params: DataParams) -> DataLoaderManager:
     """
     Create and configure DataLoaderManager based on the provided parameters.
 

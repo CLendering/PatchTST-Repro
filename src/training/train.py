@@ -284,9 +284,9 @@ def test_model(model, config: TrainingConfig, train_identifier: str, device: tor
                 f.write(f"{key}: {value}\n")
 
         # Save values to a numpy file
-        np.save(os.path.join(results_path, "predictions.npy"), filtered_predictions)
-        np.save(os.path.join(results_path, "ground_truth.npy"), filtered_ground_truth)
-        np.save(os.path.join(results_path, "inputs.npy"), filtered_inputs)
+        # np.save(os.path.join(results_path, "predictions.npy"), filtered_predictions)
+        # np.save(os.path.join(results_path, "ground_truth.npy"), filtered_ground_truth)
+        # np.save(os.path.join(results_path, "inputs.npy"), filtered_inputs)
 
 
     return metrics

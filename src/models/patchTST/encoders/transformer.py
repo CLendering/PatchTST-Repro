@@ -94,9 +94,12 @@ class TSTEncoderLayer(nn.Module):
         if self.pre_normalization:
             inputs = self.attn_normalization(inputs)
 
-        attended, attn_weights, scores = self.attention_block(
-            inputs, inputs, inputs, previous_attention
-        )
+        if self.residual_attention:
+            attended, attn_weights, scores = self.attention_block(
+                inputs, inputs, inputs, previous_attention
+            )
+        else:
+            attended, attn_weights = self.attention_block(inputs, inputs, inputs)
         if self.store_attention:
             # You can store attention weights or scores for analysis if needed
             self.last_attention = attn_weights

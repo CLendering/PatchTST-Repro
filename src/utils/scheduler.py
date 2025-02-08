@@ -1,6 +1,6 @@
 
 from src.training.config import TrainingConfig
-
+from torch.optim.lr_scheduler import _LRScheduler
 
 def adjust_lr(optimizer, scheduler, epoch, config: TrainingConfig):
     """
@@ -59,3 +59,24 @@ def adjust_lr(optimizer, scheduler, epoch, config: TrainingConfig):
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr
             print(f"Updating learning rate to {new_lr}")
+
+class ExponentialLR(_LRScheduler):
+    """Exponentially increases the learning rate between two boundaries over a number of iterations.
+
+    Arguments:
+        optimizer (torch.optim.Optimizer): wrapped optimizer.
+        end_lr (float): the final learning rate.
+        num_iter (int): the number of iterations over which the test occurs.
+        last_epoch (int, optional): the index of last epoch. Default: -1.
+    """
+
+    def __init__(self, optimizer, end_lr, num_iter, last_epoch=-1):
+        self.end_lr = end_lr
+        self.last_epoch = last_epoch
+        if num_iter <= 1: raise ValueError("`num_iter` must be larger than 1")
+        self.num_iter = num_iter
+        super(ExponentialLR, self).__init__(optimizer, last_epoch)
+
+    def get_lr(self):  
+        r = (self.last_epoch+1) / (self.num_iter - 1)
+        return [base_lr * (self.end_lr / base_lr) ** r for base_lr in self.base_lrs]

@@ -336,7 +336,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--patience",
         type=int,
-        default=2,
+        default=10,
         help="Patience for early stopping (default: 10)",
     )
     parser.add_argument(

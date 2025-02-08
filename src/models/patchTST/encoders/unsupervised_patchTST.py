@@ -7,15 +7,14 @@ import sys
 
 sys.path.append(__file__.replace("src/models/encoders/patchTST.py", ""))
 
-from src.models.patchTST.attention import MultiheadAttention
+from src.models.patchTST.attention.multihead import MultiheadAttention
 from src.models.patchTST.encoders.transformer import TSTEncoder
-from src.models.patchTST.positional import generate_positional_encoding
-from src.models.patchTST.heads import (
-    LinearPretrainHead,
-    LinearPredictionHead,
-    LinearRegressionHead,
-    LinearClassificationHead,
-)
+from src.models.patchTST.positional.encoding import generate_positional_encoding
+from src.models.patchTST.heads.prediction import LinearPredictionHead
+from src.models.patchTST.heads.regression import LinearRegressionHead
+from src.models.patchTST.heads.classification import LinearClassificationHead
+from src.models.patchTST.heads.pretrain import LinearPretrainHead
+
 
 
 class PatchTST(nn.Module):

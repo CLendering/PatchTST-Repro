@@ -1,4 +1,3 @@
-
 import os
 import sys
 
@@ -6,14 +5,16 @@ import sys
 sys.path.append(".")
 
 import random
-from config import parse_args
+from config import PreTrainingConfig, parse_args
 import numpy as np
 import torch
 from tqdm import tqdm
-from src.pre_train_new.utils import find_learning_rate, pre_train_model
+from src.self_supervised.utils import find_learning_rate, pre_train_model
+import warnings
 
+warnings.filterwarnings("ignore")
 if __name__ == "__main__":
-    config = parse_args()
+    config: PreTrainingConfig = parse_args(mode="pretrain")
 
     print("Configurations:")
     for key, value in vars(config).items():
@@ -24,7 +25,7 @@ if __name__ == "__main__":
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    
+
     # Enable CUDA
     use_cuda = config.use_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -33,8 +34,19 @@ if __name__ == "__main__":
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
+    # Checkpoint folder
+    checkpoint_folder = os.path.join(config.checkpoint_dir, "self_supervised", "pretrain", config.model_identifier)
+
+
     print(f"Device: {device}")
-    learning_rate = find_learning_rate(config, device)
+    learning_rate = find_learning_rate(
+        config=config, device=device, head_type="pretrain", checkpoint_folder=checkpoint_folder, mode="pretrain"
+    )
 
     print("Suggested Learning Rate:", learning_rate)
-    pre_train_model(config, device, learning_rate)
+    pre_train_model(
+        config=config,
+        device=device,
+        suggested_lr=learning_rate,
+        checkpoint_folder=checkpoint_folder,
+    )

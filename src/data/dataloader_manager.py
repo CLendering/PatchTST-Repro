@@ -277,7 +277,7 @@ def get_dataloaders(params: DataParams) -> DataLoaderManager:
         else:
             inputs, targets = first_train_sample
         # Number of variables/features
-        dataloader_manager.vars = inputs.shape[1]
+        dataloader_manager.vars = inputs.shape[2]
         # Store context length
         dataloader_manager.len = params.context_points
         # Example usage: store c based on shape of targets

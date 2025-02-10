@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from src.self_supervised.config import FinetuneConfig, PreTrainingConfig, SupervisedTrainingConfig
+from src.self_supervised.config import FinetuneConfig, PreTrainingConfig, SupervisedTrainingConfig, TransferLearningConfig
 from src.models.patchTST.encoders.unsupervised_patchTST import PatchTST
 from src.utils.scheduler import ExponentialLR
 from src.utils.early_stopping import EarlyStopping
@@ -259,7 +259,7 @@ def get_data_loader_manager(config: PreTrainingConfig) -> DataLoaderManager:
 
 # Find learning rate using the valley method
 def find_learning_rate(
-    config: PreTrainingConfig | FinetuneConfig,
+    config: PreTrainingConfig | FinetuneConfig | TransferLearningConfig,
     device,
     starting_lr=1e-7,
     end_lr=10,

@@ -23,7 +23,7 @@ fi
 model_name=PatchTST
 model_identifier=patchtst_ettm2_univariate
 dataset=ettm2
-input_length=336
+input_length=512
 
 for prediction_length in 96 192 336 720
 do
@@ -49,5 +49,5 @@ do
       --patience 20 \
       --learning_rate_adjustment TST \
       --lr_pct_start 0.4 \
-      --bootstrap_iterations 1 --batch_size 128 --learning_rate 0.0001 >logs/supervised/univariate/$model_identifier'_'$input_length'_'$prediction_length.log 
+      --bootstrap_iterations 5 --batch_size 128 --learning_rate 0.0001 >logs/supervised/univariate/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

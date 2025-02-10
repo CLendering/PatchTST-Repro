@@ -19,7 +19,7 @@ fi
 model_name=PatchTST
 model_identifier=patchtst_illness
 dataset=illness
-input_length=104 # 128 for PatchTST/64, 104 for PatchTST/42
+input_length=128
 
 for prediction_length in 24 36 48 60
 do
@@ -44,5 +44,5 @@ do
       --epochs 100 \
       --patience 20 \
       --learning_rate_adjustment constant \
-      --bootstrap_iterations 1 --batch_size 16 --learning_rate 0.0025 >logs/supervised/$model_identifier'_'$input_length'_'$prediction_length.log 
+      --bootstrap_iterations 5 --batch_size 16 --learning_rate 0.0025 >logs/supervised/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

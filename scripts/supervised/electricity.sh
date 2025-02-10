@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1                        # Run a single task (1 instance of your program)
 #SBATCH --cpus-per-task=16                 # Number of CPU cores per task (adjust based on your needs)
 #SBATCH --mem=64G                         # Total memory (RAM) for the job (adjust based on your dataset)
-#SBATCH --time=24:00:00                    # Time limit (24 hours)
+#SBATCH --time=47:00:00                    # Time limit (24 hours)
 #SBATCH --output=patchtst_%j.log               # Standard output and error log (%j is replaced by job ID)
 
 if [ ! -d "./logs" ]; then
@@ -19,7 +19,7 @@ fi
 model_name=PatchTST
 model_identifier=patchtst_electricity
 dataset=electricity
-input_length=336
+input_length=512
 
 for prediction_length in 96 192 336 720
 do
@@ -45,5 +45,5 @@ do
       --patience 10 \
       --learning_rate_adjustment TST \
       --lr_pct_start 0.2 \
-      --bootstrap_iterations 1 --batch_size 32 --learning_rate 0.0001 >logs/supervised/$model_identifier'_'$input_length'_'$prediction_length.log 
+      --bootstrap_iterations 5 --batch_size 32 --learning_rate 0.0001 >logs/supervised/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

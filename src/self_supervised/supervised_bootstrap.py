@@ -55,6 +55,10 @@ if __name__ == "__main__":
         torch.cuda.empty_cache()
         metrics_dict[config.model_identifier] = metrics
 
+        # Remove the checkpoint model after testing
+        checkpoint_model = os.path.join(checkpoint_folder, f"checkpoint.pt")
+        os.remove(checkpoint_model)
+
     # Calculate bootstrap statistics with confidence intervals
     final_metrics = calculate_bootstrap_statistics(metrics_dict)
     print("Final metrics:")

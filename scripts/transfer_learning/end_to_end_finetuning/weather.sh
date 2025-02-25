@@ -46,5 +46,5 @@ do
         --finetune_epochs 1 \
         --finetune_mode \
         --no-linear_probe_mode \
-        --bootstrap_iterations 5 --batch_size 16 >logs/transfer_learning/finetuning/$model_identifier'_'$input_length'_'$prediction_length.log 
+        --bootstrap_iterations 3 --batch_size 64 >logs/transfer_learning/finetuning/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

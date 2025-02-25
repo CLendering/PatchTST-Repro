@@ -857,6 +857,10 @@ def finetune_model(
         # Reset Gradient
         optimizer.zero_grad()
 
+    # Unallocate model
+    del model
+    torch.cuda.empty_cache()
+
     # Finetune the entire network if n_epochs > 0
     if config.finetune_epochs > 0 and not linear_probe_only:
         # Get model and move to device
@@ -876,15 +880,16 @@ def finetune_model(
             head_type="prediction",
             residual_attention=False,
             shared_projection=True,
-        ).to(device)
+        )
 
         # Load weights after head finetuning
         model = load_weights(
             os.path.join(checkpoint_folder, "checkpoint.pt"),
             model,
             exclude_head=False,
-            device=device,
         )
+
+        model = model.to(device)
 
         print("Finetuning the entire network, unfreezing all params")
         for param in model.parameters():

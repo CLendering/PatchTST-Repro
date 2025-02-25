@@ -5,8 +5,9 @@
 #SBATCH --ntasks=1                        # Run a single task (1 instance of your program)
 #SBATCH --cpus-per-task=16                 # Number of CPU cores per task (adjust based on your needs)
 #SBATCH --mem=64G                         # Total memory (RAM) for the job (adjust based on your dataset)
-#SBATCH --time=24:00:00                    # Time limit (24 hours)
+#SBATCH --time=72:00:00                    # Time limit (24 hours)
 #SBATCH --output=patchtst_%j.log               # Standard output and error log (%j is replaced by job ID)
+#SBATCH --constraint=h100
 
 if [ ! -d "./logs" ]; then
     mkdir ./logs
@@ -28,7 +29,7 @@ input_length=512
 
 # Define prediction length:
 # 96, 192, 336, 720
-for prediction_length in 96 192 336 720
+for prediction_length in 720
 do
     python -u src/self_supervised/transfer_learning_bootstrap.py \
         --model_identifier $model_identifier'_'$input_length'_'$prediction_length \
@@ -46,5 +47,5 @@ do
         --finetune_epochs 20 \
         --finetune_mode \
         --no-linear_probe_mode \
-        --bootstrap_iterations 5 --batch_size 64 >logs/transfer_learning/finetuning/$model_identifier'_'$input_length'_'$prediction_length.log 
+        --bootstrap_iterations 2 --batch_size 2 >logs/transfer_learning/finetuning/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

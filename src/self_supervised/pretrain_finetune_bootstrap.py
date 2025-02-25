@@ -52,12 +52,14 @@ if __name__ == "__main__":
         config.model_identifier = f"{config.model_identifier}_bootstrap_{i}"
         print(f"Device: {device}")
         learning_rate = find_learning_rate(config=config, device=device, head_type='pretrain', mode="pretrain", checkpoint_folder=checkpoint_folder)
-
+        torch.cuda.empty_cache()
         print("Suggested Learning Rate:", learning_rate)
         pre_train_model(config=config, device=device, suggested_lr=learning_rate, checkpoint_folder=checkpoint_folder)
-
+        torch.cuda.empty_cache()
         learning_rate = find_learning_rate(config=config, device=device, head_type='prediction', mode="finetuning", checkpoint_folder=checkpoint_folder)
         print("Suggested Finetuning Learning Rate:", learning_rate)
+
+        torch.cuda.empty_cache()
 
         finetune_model(config, device, learning_rate, checkpoint_folder, linear_probe_only=config.linear_probe_mode)
         print("Finetuning Completed")

@@ -42,7 +42,7 @@ do
       --head_dropout 0\
       --patch_length 16\
       --stride 8\
-      --epochs 20\
+      --epochs 100\
       --patience 20\
       --only_patching \
       --bootstrap_iterations 1 --batch_size 1 --learning_rate 0.0001 >logs/ablation_no_ci/$model_identifier'_'$input_length'_'$prediction_length.log 

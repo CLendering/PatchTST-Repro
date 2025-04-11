@@ -20,9 +20,8 @@ fi
 model_name=PatchTST
 model_identifier=patchtst_weather
 dataset=weather
-input_length=336
-
-for prediction_length in 96 192 336 720
+prediction_length=720
+for input_length in 24 48 96 192 336 720
 do
     python -u src/training/train.py \
       --train_mode \
@@ -40,9 +39,10 @@ do
       --dropout 0.2\
       --fc_dropout 0.2\
       --head_dropout 0\
-      --patch_length 1\
-      --stride 1\
+      --patch_length 16 \
+      --stride 8 \
       --epochs 100\
       --patience 20\
+      --fp16 \
       --bootstrap_iterations 1 --batch_size 1 --learning_rate 0.0001 >logs/ablation_no_p/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

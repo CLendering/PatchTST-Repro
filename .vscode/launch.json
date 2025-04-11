@@ -24,14 +24,15 @@
             "--head_dropout", "0",
             "--patch_length", "16",
             "--stride", "8",
-            "--epochs", "100",
+            "--epochs", "5",
             "--patience", "10",
             "--learning_rate_adjustment", "TST",
             "--lr_pct_start", "0.2",
             "--only_patching",
             "--bootstrap_iterations", "1",
             "--batch_size", "1",
-            "--learning_rate", "0.0001"
+            "--learning_rate", "0.0001",
+            "--fp16",
         ],
         "console": "integratedTerminal",
         "preLaunchTask": "Create logs directories"

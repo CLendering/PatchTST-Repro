@@ -67,6 +67,9 @@ class TrainingConfig:
     # Ablation
     only_patching: bool
 
+    # FP16
+    fp16: bool
+
 
 def get_parser() -> argparse.ArgumentParser:
     """
@@ -382,6 +385,14 @@ def get_parser() -> argparse.ArgumentParser:
         help="Enable only patching",
     )
 
+    # FP16
+    parser.add_argument(
+        "--fp16",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable FP16 training",
+    )
+
     return parser
 
 
@@ -444,4 +455,5 @@ def parse_args() -> TrainingConfig:
         output_activation=args.output_activation,
         do_predict=args.do_predict,
         only_patching=args.only_patching,
+        fp16=args.fp16,
     )

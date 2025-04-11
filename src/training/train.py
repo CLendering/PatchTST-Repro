@@ -91,6 +91,12 @@ def train_model(config: TrainingConfig, train_identifier: str, device: torch.dev
         epochs=config.epochs,
     )
 
+    # If fp16 is enabled, create GradScaler
+    if config.fp16:
+        scaler = torch.amp.GradScaler()
+    else:
+        scaler = None
+
     best_val_loss = float("inf")
 
     early_stopping = EarlyStopping(
@@ -105,41 +111,40 @@ def train_model(config: TrainingConfig, train_identifier: str, device: torch.dev
         model.train()
         for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{config.epochs}"):
             optimizer.zero_grad()
-            if config.model == "PatchTST" or "Linear" in config.model:
-                x, y = batch
-                x, y = x.to(device), y.to(device)
-                y_hat = model(x)
+
+            if config.fp16:
+                with torch.amp.autocast(device_type=device.type):
+                    # Forward pass
+                    if config.model == "PatchTST" or "Linear" in config.model:
+                        x, y = batch
+                        x, y = x.to(device), y.to(device)
+                        y_hat = model(x)
+                    else:
+                        # Decoder input
+                        decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
+                        decoder_input = torch.cat(
+                            [y[:, :config.prediction_length, :], decoder_input], dim=1
+                        ).float().to(device)
+
+                        x, y, x_mark, y_mark = batch
+                        x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
+                        if config.output_attention:
+                            y_hat = model(x, x_mark, decoder_input, y_mark)[0]
+                        else:
+                            y_hat = model(x, x_mark, decoder_input, y_mark)
+
+                    feature_dim = -1 if config.features == "MS" else 0
+                    y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
+                    y = y[:, -config.prediction_length:, feature_dim:]
+
+                    loss = criterion(y_hat, y)
+
+                # Backward pass with GradScaler
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
             else:
-                # Decoder input
-                decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
-                decoder_input = torch.cat([y[:, :config.prediction_length, :], decoder_input], dim=1).float().to(device)
-                x, y, x_mark, y_mark = batch
-                x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
-                if config.output_attention:
-                    y_hat = model(x, x_mark, decoder_input, y_mark)[0]
-                else:
-                    y_hat = model(x, x_mark, decoder_input, y_mark)
-
-            feature_dim = -1 if config.features == "MS" else 0
-            y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
-            y = y[:, -config.prediction_length:, feature_dim:]
-
-            loss = criterion(y_hat, y)
-            loss.backward()
-            train_loss += loss.item()
-
-            optimizer.step()
-
-            if config.learning_rate_adjustment == "TST":
-                adjust_lr(optimizer, scheduler, epoch+1, config)
-                scheduler.step()
-
-        train_loss /= len(train_loader)
-        
-        val_loss = 0
-        model.eval()
-        with torch.no_grad():
-            for batch in tqdm(val_loader, desc=f"Validation - Epoch {epoch + 1}/{config.epochs}"):
+                # Normal FP32 training
                 if config.model == "PatchTST" or "Linear" in config.model:
                     x, y = batch
                     x, y = x.to(device), y.to(device)
@@ -147,7 +152,9 @@ def train_model(config: TrainingConfig, train_identifier: str, device: torch.dev
                 else:
                     # Decoder input
                     decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
-                    decoder_input = torch.cat([y[:, :config.prediction_length, :], decoder_input], dim=1).float().to(device)
+                    decoder_input = torch.cat(
+                        [y[:, :config.prediction_length, :], decoder_input], dim=1
+                    ).float().to(device)
                     x, y, x_mark, y_mark = batch
                     x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
                     if config.output_attention:
@@ -158,16 +165,81 @@ def train_model(config: TrainingConfig, train_identifier: str, device: torch.dev
                 feature_dim = -1 if config.features == "MS" else 0
                 y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
                 y = y[:, -config.prediction_length:, feature_dim:]
-
                 loss = criterion(y_hat, y)
-                val_loss += loss.item()
+
+                loss.backward()
+                optimizer.step()
+
+            train_loss += loss.item()
+
+            # Adjust learning rate (OneCycleLR) if needed
+            if config.learning_rate_adjustment == "TST":
+                adjust_lr(optimizer, scheduler, epoch + 1, config)
+                scheduler.step()
+
+        train_loss /= len(train_loader)
+        
+        val_loss = 0
+        model.eval()
+        with torch.no_grad():
+            if config.fp16:
+                # Use autocast for validation as well
+                with torch.amp.autocast(device_type=device.type):
+                    for batch in tqdm(val_loader, desc=f"Validation - Epoch {epoch + 1}/{config.epochs}"):
+                        if config.model == "PatchTST" or "Linear" in config.model:
+                            x, y = batch
+                            x, y = x.to(device), y.to(device)
+                            y_hat = model(x)
+                        else:
+                            # Decoder input
+                            decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
+                            decoder_input = torch.cat(
+                                [y[:, :config.prediction_length, :], decoder_input], dim=1
+                            ).float().to(device)
+                            x, y, x_mark, y_mark = batch
+                            x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
+                            if config.output_attention:
+                                y_hat = model(x, x_mark, decoder_input, y_mark)[0]
+                            else:
+                                y_hat = model(x, x_mark, decoder_input, y_mark)
+                        
+                        feature_dim = -1 if config.features == "MS" else 0
+                        y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
+                        y = y[:, -config.prediction_length:, feature_dim:]
+
+                        loss = criterion(y_hat, y)
+                        val_loss += loss.item()
+            else:
+                for batch in tqdm(val_loader, desc=f"Validation - Epoch {epoch + 1}/{config.epochs}"):
+                    if config.model == "PatchTST" or "Linear" in config.model:
+                        x, y = batch
+                        x, y = x.to(device), y.to(device)
+                        y_hat = model(x)
+                    else:
+                        # Decoder input
+                        decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
+                        decoder_input = torch.cat(
+                            [y[:, :config.prediction_length, :], decoder_input], dim=1
+                        ).float().to(device)
+                        x, y, x_mark, y_mark = batch
+                        x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
+                        if config.output_attention:
+                            y_hat = model(x, x_mark, decoder_input, y_mark)[0]
+                        else:
+                            y_hat = model(x, x_mark, decoder_input, y_mark)
+                    
+                    feature_dim = -1 if config.features == "MS" else 0
+                    y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
+                    y = y[:, -config.prediction_length:, feature_dim:]
+                    
+                    loss = criterion(y_hat, y)
+                    val_loss += loss.item()
 
         val_loss /= len(val_loader)
 
         print(f"Epoch {epoch + 1}/{config.epochs} - Train Loss: {train_loss:.6f} - Val Loss: {val_loss:.6f}")
 
         early_stopping(val_loss, model, optimizer, epoch)
-
         best_val_loss = early_stopping.best_metric
 
         if early_stopping.early_stop:
@@ -175,7 +247,7 @@ def train_model(config: TrainingConfig, train_identifier: str, device: torch.dev
             break
 
         if config.learning_rate_adjustment != "TST":
-            adjust_lr(optimizer, scheduler, epoch+1, config)
+            adjust_lr(optimizer, scheduler, epoch + 1, config)
             scheduler.step()
 
     print(f"Training completed. Best validation loss: {best_val_loss}")
@@ -189,8 +261,6 @@ def train_model(config: TrainingConfig, train_identifier: str, device: torch.dev
     return model
 
 
-
-
 def test_model(model, config: TrainingConfig, train_identifier: str, device: torch.device):
     # Get data loaders
     data_loader_manager = get_data_loader_manager(config)
@@ -199,36 +269,63 @@ def test_model(model, config: TrainingConfig, train_identifier: str, device: tor
     # Get model and move to device
     model = model.to(device)
 
-
     results_path = './test_results/' + train_identifier + '/'
     os.makedirs(results_path, exist_ok=True)
 
     model.eval()
-
     predictions = []
     ground_truth = []
     inputs = []
+
+    use_autocast = config.fp16
+
     with torch.no_grad():
         count = 0
         for batch in tqdm(test_loader, desc="Testing"):
-            if config.model == "PatchTST" or "Linear" in config.model:
-                x, y = batch
-                x, y = x.to(device), y.to(device)
-                y_hat = model(x)
-            else:
-                # Decoder input
-                decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
-                decoder_input = torch.cat([y[:, :config.prediction_length, :], decoder_input], dim=1).float().to(device)
-                x, y, x_mark, y_mark = batch
-                x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
-                if config.output_attention:
-                    y_hat = model(x, x_mark, decoder_input, y_mark)[0]
-                else:
-                    y_hat = model(x, x_mark, decoder_input, y_mark)
+            if use_autocast:
+                with torch.amp.autocast(device_type=device.type):
+                    if config.model == "PatchTST" or "Linear" in config.model:
+                        x, y = batch
+                        x, y = x.to(device), y.to(device)
+                        y_hat = model(x)
+                    else:
+                        # Decoder input
+                        decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
+                        decoder_input = torch.cat(
+                            [y[:, :config.prediction_length, :], decoder_input], dim=1
+                        ).float().to(device)
+                        x, y, x_mark, y_mark = batch
+                        x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
+                        if config.output_attention:
+                            y_hat = model(x, x_mark, decoder_input, y_mark)[0]
+                        else:
+                            y_hat = model(x, x_mark, decoder_input, y_mark)
 
-            feature_dim = -1 if config.features == "MS" else 0
-            y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
-            y = y[:, -config.prediction_length:, feature_dim:]
+                    feature_dim = -1 if config.features == "MS" else 0
+                    y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
+                    y = y[:, -config.prediction_length:, feature_dim:]
+            else:
+                # Normal inference
+                if config.model == "PatchTST" or "Linear" in config.model:
+                    x, y = batch
+                    x, y = x.to(device), y.to(device)
+                    y_hat = model(x)
+                else:
+                    # Decoder input
+                    decoder_input = torch.zeros_like(y[:, -config.prediction_length:, :]).float()
+                    decoder_input = torch.cat(
+                        [y[:, :config.prediction_length, :], decoder_input], dim=1
+                    ).float().to(device)
+                    x, y, x_mark, y_mark = batch
+                    x, y, x_mark, y_mark = x.to(device), y.to(device), x_mark.to(device), y_mark.to(device)
+                    if config.output_attention:
+                        y_hat = model(x, x_mark, decoder_input, y_mark)[0]
+                    else:
+                        y_hat = model(x, x_mark, decoder_input, y_mark)
+
+                feature_dim = -1 if config.features == "MS" else 0
+                y_hat = y_hat[:, -config.prediction_length:, feature_dim:]
+                y = y[:, -config.prediction_length:, feature_dim:]
 
             y_hat_detach = y_hat.detach().cpu().numpy()
             y_detach = y.detach().cpu().numpy()
@@ -249,10 +346,8 @@ def test_model(model, config: TrainingConfig, train_identifier: str, device: tor
         max_len = max(arr.shape[0] for arr in predictions)
 
         filtered_predictions, filtered_ground_truth, filtered_inputs = [], [], []
-
         for pred, gt, inp in zip(predictions, ground_truth, inputs):
             if pred.shape[0] == max_len:
-                # Keep them if predictions match
                 filtered_predictions.append(pred)
                 filtered_ground_truth.append(gt)
                 filtered_inputs.append(inp)
@@ -272,7 +367,6 @@ def test_model(model, config: TrainingConfig, train_identifier: str, device: tor
             -1, filtered_inputs.shape[-2], filtered_inputs.shape[-1]
         )
 
-
         metrics = calculate_metrics(filtered_predictions, filtered_ground_truth)
         print("Metrics:")
         for key, value in metrics.items():
@@ -283,16 +377,7 @@ def test_model(model, config: TrainingConfig, train_identifier: str, device: tor
             for key, value in metrics.items():
                 f.write(f"{key}: {value}\n")
 
-        # Save values to a numpy file
-        # np.save(os.path.join(results_path, "predictions.npy"), filtered_predictions)
-        # np.save(os.path.join(results_path, "ground_truth.npy"), filtered_ground_truth)
-        # np.save(os.path.join(results_path, "inputs.npy"), filtered_inputs)
-
-
     return metrics
-
-
-
 
 
 if __name__ == "__main__":
@@ -339,9 +424,3 @@ if __name__ == "__main__":
             print(f"{key}: {value}")
     else:
         raise ValueError("Not Implemented.")
-        
-
-
-    
-
-    

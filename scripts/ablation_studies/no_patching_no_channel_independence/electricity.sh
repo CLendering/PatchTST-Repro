@@ -42,7 +42,7 @@ do
       --head_dropout 0 \
       --patch_length 1 \
       --stride 1 \
-      --epochs 100 \
+      --epochs 20 \
       --patience 10 \
       --learning_rate_adjustment TST \
       --lr_pct_start 0.2 \

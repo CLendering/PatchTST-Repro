@@ -104,6 +104,7 @@ class PatchTST(nn.Module):
                 affine=affine,
                 subtract_last=subtract_last,
                 verbose=verbose,
+                only_patching=configs.only_patching,
                 **kwargs
             )
 
@@ -142,6 +143,7 @@ class PatchTST(nn.Module):
                 affine=affine,
                 subtract_last=subtract_last,
                 verbose=verbose,
+                only_patching=configs.only_patching,
                 **kwargs
             )
         else:
@@ -181,6 +183,7 @@ class PatchTST(nn.Module):
                 affine=affine,
                 subtract_last=subtract_last,
                 verbose=verbose,
+                only_patching=configs.only_patching,
                 **kwargs
             )
 

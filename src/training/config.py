@@ -64,6 +64,9 @@ class TrainingConfig:
     # Bootstrap parameters
     bootstrap_iterations: int
 
+    # Ablation
+    only_patching: bool
+
 
 def get_parser() -> argparse.ArgumentParser:
     """
@@ -371,7 +374,14 @@ def get_parser() -> argparse.ArgumentParser:
         help="Number of bootstrap iterations",
     )
 
-    
+    # Ablations
+    parser.add_argument(
+        "--only_patching",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable only patching",
+    )
+
     return parser
 
 
@@ -433,4 +443,5 @@ def parse_args() -> TrainingConfig:
         activation=args.activation,
         output_activation=args.output_activation,
         do_predict=args.do_predict,
+        only_patching=args.only_patching,
     )

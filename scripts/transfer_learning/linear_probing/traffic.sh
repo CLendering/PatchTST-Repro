@@ -45,5 +45,5 @@ do
         --freeze_epochs 20 \
         --no-finetune_mode \
         --linear_probe_mode \
-        --bootstrap_iterations 5 --batch_size 64 >logs/transfer_learning/linear_probing/$model_identifier'_'$input_length'_'$prediction_length.log 
+        --bootstrap_iterations 3 --batch_size 64 >logs/transfer_learning/linear_probing/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

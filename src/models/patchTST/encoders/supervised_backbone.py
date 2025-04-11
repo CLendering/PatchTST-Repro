@@ -49,6 +49,7 @@ class PatchTST_backbone(nn.Module):
         affine=True,
         subtract_last=False,
         verbose: bool = False,
+        only_patching=False,
         **kwargs,
     ):
 
@@ -92,6 +93,7 @@ class PatchTST_backbone(nn.Module):
             pe=pe,
             learn_pe=learn_pe,
             verbose=verbose,
+            only_patching=only_patching,
             **kwargs,
         )
 
@@ -171,6 +173,7 @@ class TSTiEncoder(nn.Module):  # i means channel-independent
         pe="zeros",
         learn_pe=True,
         verbose=False,
+        only_patching=False,
         **kwargs,
     ):
 
@@ -178,6 +181,7 @@ class TSTiEncoder(nn.Module):  # i means channel-independent
 
         self.patch_num = patch_num
         self.patch_len = patch_len
+        self.only_patching = only_patching
 
         # Input encoding
         q_len = patch_num
@@ -219,9 +223,14 @@ class TSTiEncoder(nn.Module):  # i means channel-independent
         x = x.permute(0, 1, 3, 2)  # x: [bs x nvars x patch_num x patch_len]
         x = self.W_P(x)  # x: [bs x nvars x patch_num x d_model]
 
-        u = torch.reshape(
-            x, (x.shape[0] * x.shape[1], x.shape[2], x.shape[3])
-        )  # u: [bs * nvars x patch_num x d_model]
+        if self.only_patching:
+            u = torch.reshape(
+                x, (x.shape[0], x.shape[1] * x.shape[2], x.shape[3])
+            )  # u: [bs x nvars * patch_num x d_model]
+        else:
+            u = torch.reshape(
+                x, (x.shape[0] * x.shape[1], x.shape[2], x.shape[3])
+            )  # u: [bs * nvars x patch_num x d_model]
         u = self.dropout(u + self.W_pos)  # u: [bs * nvars x patch_num x d_model]
 
         # Encoder

@@ -40,5 +40,5 @@ do
         --patch_length 12 \
         --stride 12 \
         --epochs 100 \
-        --bootstrap_iterations 5 --batch_size 64 >logs/self_supervised/supervised/$model_identifier'_'$input_length'_'$prediction_length.log 
+        --bootstrap_iterations 3 --batch_size 64 >logs/self_supervised/supervised/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

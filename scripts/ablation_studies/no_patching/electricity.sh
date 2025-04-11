@@ -5,43 +5,45 @@
 #SBATCH --ntasks=1                        # Run a single task (1 instance of your program)
 #SBATCH --cpus-per-task=16                 # Number of CPU cores per task (adjust based on your needs)
 #SBATCH --mem=64G                         # Total memory (RAM) for the job (adjust based on your dataset)
-#SBATCH --time=24:00:00                    # Time limit (24 hours)
+#SBATCH --time=47:00:00                    # Time limit (24 hours)
 #SBATCH --output=patchtst_%j.log               # Standard output and error log (%j is replaced by job ID)
 
 if [ ! -d "./logs" ]; then
     mkdir ./logs
 fi
 
-if [ ! -d "./logs/supervised" ]; then
-    mkdir ./logs/supervised
+if [ ! -d "./logs/ablation_no_p" ]; then
+    mkdir ./logs/ablation_no_p
 fi
 
 model_name=PatchTST
-model_identifier=patchtst_etth1
-dataset=etth1
-input_length=512
+model_identifier=patchtst_electricity
+dataset=electricity
+input_length=336
 
 for prediction_length in 96 192 336 720
 do
     python -u src/training/train.py \
       --train_mode \
-      --model_identifier $model_identifier'_'$input_length'_'$prediction_length \
+      --model_identifier $model_identifier'_'$input_length'_'$prediction_length'_'$dataset \
       --model $model_name \
       --dataset $dataset \
       --features M \
       --input_length $input_length \
       --prediction_length $prediction_length \
-      --encoder_input_size 7 \
+      --encoder_input_size 321 \
       --num_encoder_layers 3 \
-      --n_heads 4 \
-      --d_model 16 \
-      --d_fcn 128 \
-      --dropout 0.3 \
-      --fc_dropout 0.3 \
+      --n_heads 16 \
+      --d_model 128 \
+      --d_fcn 256 \
+      --dropout 0.2 \
+      --fc_dropout 0.2 \
       --head_dropout 0 \
-      --patch_length 16 \
-      --stride 8 \
+      --patch_length 1 \
+      --stride 1 \
       --epochs 100 \
-      --patience 20 \
-      --bootstrap_iterations 5 --batch_size 128 --learning_rate 0.0001 >logs/supervised/$model_identifier'_'$input_length'_'$prediction_length.log 
+      --patience 10 \
+      --learning_rate_adjustment TST \
+      --lr_pct_start 0.2 \
+      --bootstrap_iterations 2 --batch_size 1 --learning_rate 0.0001 >logs/ablation_no_p/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

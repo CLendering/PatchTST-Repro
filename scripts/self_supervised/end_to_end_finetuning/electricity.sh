@@ -45,5 +45,5 @@ do
         --finetune_epochs 20 \
         --finetune_mode \
         --no-linear_probe_mode \
-        --bootstrap_iterations 5 --batch_size 64 >logs/self_supervised/finetuning/$model_identifier'_'$input_length'_'$prediction_length.log 
+        --bootstrap_iterations 3 --batch_size 64 >logs/self_supervised/finetuning/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

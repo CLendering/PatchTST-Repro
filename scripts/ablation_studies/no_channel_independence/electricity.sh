@@ -7,7 +7,7 @@
 #SBATCH --mem=64G                         # Total memory (RAM) for the job (adjust based on your dataset)
 #SBATCH --time=47:00:00                    # Time limit (24 hours)
 #SBATCH --output=patchtst_%j.log               # Standard output and error log (%j is replaced by job ID)
-#SBATCH --nodelist=gwn01,gwn02,gwn03,gwn04  
+#SBATCH --constraint=h100
 
 if [ ! -d "./logs" ]; then
     mkdir ./logs
@@ -20,7 +20,7 @@ fi
 model_name=PatchTST
 model_identifier=patchtst_electricity
 dataset=electricity
-input_length=512
+input_length=336
 
 for prediction_length in 96 192 336 720
 do
@@ -46,6 +46,6 @@ do
       --patience 10 \
       --learning_rate_adjustment TST \
       --lr_pct_start 0.2 \
-      --no-channel_independence \
+      --only_patching \
       --bootstrap_iterations 1 --batch_size 1 --learning_rate 0.0001 >logs/ablation_no_ci/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

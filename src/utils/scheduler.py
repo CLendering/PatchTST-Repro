@@ -58,7 +58,7 @@ def adjust_lr(optimizer, scheduler, epoch, config: TrainingConfig):
         new_lr = lr_adjust[epoch]
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr
-            print(f"Updating learning rate to {new_lr}")
+            #print(f"Updating learning rate to {new_lr}")
 
 class ExponentialLR(_LRScheduler):
     """Exponentially increases the learning rate between two boundaries over a number of iterations.

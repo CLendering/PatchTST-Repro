@@ -188,7 +188,13 @@ class TSTiEncoder(nn.Module):  # i means channel-independent
         self.W_P = nn.Linear(
             patch_len, d_model
         )  # Eq 1: projection of feature vectors onto a d-dim vector space
-        self.seq_len = q_len
+
+        # If only_patching=True, the "time length" is nvars * patch_num,
+        # otherwise it's just patch_num:
+        if only_patching:
+            q_len = c_in * patch_num
+        else:
+            q_len = patch_num
 
         # Positional encoding
         self.W_pos = generate_positional_encoding(
@@ -216,28 +222,34 @@ class TSTiEncoder(nn.Module):  # i means channel-independent
             store_attention=store_attn,
         )
 
-    def forward(self, x) -> Tensor:  # x: [bs x nvars x patch_len x patch_num]
+    def forward(self, x: Tensor) -> Tensor:
+        bs, nvars, patch_len, patch_num = x.shape
 
-        n_vars = x.shape[1]
-        # Input encoding
-        x = x.permute(0, 1, 3, 2)  # x: [bs x nvars x patch_num x patch_len]
-        x = self.W_P(x)  # x: [bs x nvars x patch_num x d_model]
+        # 1) Project: [bs, nvars, patch_num, d_model]
+        x = x.permute(0, 1, 3, 2)
+        x = self.W_P(x)
 
-        if self.only_patching:
-            u = torch.reshape(
-                x, (x.shape[0], x.shape[1] * x.shape[2], x.shape[3])
-            )  # u: [bs x nvars * patch_num x d_model]
+        # 2) Flatten
+        if not self.only_patching:
+            x = x.reshape(bs * nvars, patch_num, x.shape[-1])   # shape [bs*nvars, patch_num, d_model]
+            pe_slice = self.W_pos[:patch_num, :]                # [patch_num, d_model]
         else:
-            u = torch.reshape(
-                x, (x.shape[0] * x.shape[1], x.shape[2], x.shape[3])
-            )  # u: [bs * nvars x patch_num x d_model]
-        u = self.dropout(u + self.W_pos)  # u: [bs * nvars x patch_num x d_model]
+            x = x.reshape(bs, patch_num * nvars, x.shape[-1])   # shape [bs, patch_num*nvars, d_model]
+            pe_slice = self.W_pos[:(patch_num * nvars), :]       # [patch_num*nvars, d_model]
 
-        # Encoder
-        z = self.encoder(u)  # z: [bs * nvars x patch_num x d_model]
-        z = torch.reshape(
-            z, (-1, n_vars, z.shape[-2], z.shape[-1])
-        )  # z: [bs x nvars x patch_num x d_model]
-        z = z.permute(0, 1, 3, 2)  # z: [bs x nvars x d_model x patch_num]
+        # 3) Add positional encoding
+        #    We'll unsqueeze(0) so pe_slice can broadcast across the batch dimension
+        x = x + pe_slice.unsqueeze(0)  # shape => broadcast to [batch, seq_len, d_model]
+        x = self.dropout(x)
 
-        return z
+        # 4) Transformer pass => shape still [batch, seq_len, d_model]
+        x = self.encoder(x)
+
+        # 5) Un-flatten
+        if not self.only_patching:
+            x = x.reshape(bs, nvars, patch_num, x.shape[-1])  # [bs, nvars, patch_num, d_model]
+        else:
+            x = x.reshape(bs, patch_num, nvars, x.shape[-1])  # [bs, patch_num, nvars, d_model]
+            x = x.permute(0, 2, 1, 3)                         # => [bs, nvars, patch_num, d_model]
+
+        return x

@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1                        # Run a single task (1 instance of your program)
 #SBATCH --cpus-per-task=16                 # Number of CPU cores per task (adjust based on your needs)
 #SBATCH --mem=64G                         # Total memory (RAM) for the job (adjust based on your dataset)
-#SBATCH --time=47:00:00                    # Time limit (24 hours)
+#SBATCH --time=72:00:00                    # Time limit (24 hours)
 #SBATCH --output=patchtst_%j.log               # Standard output and error log (%j is replaced by job ID)
 #SBATCH --constraint=h100
 
@@ -18,8 +18,8 @@ if [ ! -d "./logs/ablation_no_p" ]; then
 fi
 
 model_name=PatchTST
-model_identifier=patchtst_electricity
-dataset=electricity
+model_identifier=patchtst_traffic
+dataset=traffic
 input_length=336
 
 for prediction_length in 96 192 336 720
@@ -32,7 +32,7 @@ do
       --features M \
       --input_length $input_length \
       --prediction_length $prediction_length \
-      --encoder_input_size 321 \
+      --encoder_input_size 862 \
       --num_encoder_layers 3 \
       --n_heads 16 \
       --d_model 128 \
@@ -43,8 +43,9 @@ do
       --patch_length 1 \
       --stride 1 \
       --epochs 100 \
-      --patience 10 \
+      --patience 20 \
       --learning_rate_adjustment TST \
       --lr_pct_start 0.2 \
+      --only_patching \
       --bootstrap_iterations 1 --batch_size 1 --learning_rate 0.0001 >logs/ablation_no_p/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

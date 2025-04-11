@@ -46,5 +46,5 @@ do
       --patience 20 \
       --learning_rate_adjustment TST \
       --lr_pct_start 0.2 \
-      --bootstrap_iterations 2 --batch_size 4 --learning_rate 0.0001 >logs/ablation_no_p/$model_identifier'_'$input_length'_'$prediction_length.log 
+      --bootstrap_iterations 1 --batch_size 4 --learning_rate 0.0001 >logs/ablation_no_p/$model_identifier'_'$input_length'_'$prediction_length.log 
 done

@@ -7,6 +7,7 @@
 #SBATCH --mem=64G                         # Total memory (RAM) for the job (adjust based on your dataset)
 #SBATCH --time=47:00:00                    # Time limit (24 hours)
 #SBATCH --output=patchtst_%j.log               # Standard output and error log (%j is replaced by job ID)
+#SBATCH --constraint=h100
 
 if [ ! -d "./logs" ]; then
     mkdir ./logs
@@ -43,5 +44,5 @@ do
       --stride 1\
       --epochs 100\
       --patience 20\
-      --bootstrap_iterations 2 --batch_size 4 --learning_rate 0.0001 >logs/ablation_no_p/$model_identifier'_'$input_length'_'$prediction_length.log 
+      --bootstrap_iterations 1 --batch_size 1 --learning_rate 0.0001 >logs/ablation_no_p/$model_identifier'_'$input_length'_'$prediction_length.log 
 done
